@@ -1,3 +1,6 @@
+"""
+This file declare pytorch dataset to load CelebA image and attribute save in csv file
+"""
 import os
 from PIL import Image
 import torch
@@ -53,14 +56,15 @@ class ImageFolderDataset(Dataset):
 # Example usage
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
+
     data_transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
     ])
     image_dir = 'C:/MyLibrary/Data/img_align_celeba'
     attr_path = "C:/MyLibrary/Data/celebA_Anno/list_attr_celeba.csv"
+
     dataset = ImageFolderDataset(root_dir=image_dir, attr_path=attr_path, transform=data_transform)
-    
     dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=1)
     
     for i, batch in enumerate(dataloader):

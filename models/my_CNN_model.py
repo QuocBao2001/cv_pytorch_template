@@ -1,3 +1,7 @@
+"""
+This file declare a sample CNN models follow with FNN layers
+"""
+
 import torch.nn as nn
 from torchsummary import summary
 import torch
@@ -50,15 +54,12 @@ class My_CNN_models(nn.Module):
         self.ReLu = nn.ReLU(inplace=True)
 
         self.outLayer = nn.Sequential(
-            # nn.BatchNorm1d(self.DaViT_out_fts),
             nn.ReLU(),
             nn.Linear(2048, 512),
-            # nn.BatchNorm1d(512),
             nn.ReLU(),
             nn.Linear(512, output_dims),
             nn.Sigmoid()
         ) 
-        # nn.init.ones_(self.outLayer[5].weight)
 
     def forward(self, x):
         x = self.layer_1(x)
