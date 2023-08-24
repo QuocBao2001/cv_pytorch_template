@@ -17,6 +17,21 @@ cfg.label_name = ["5_o_Clock_Shadow","Arched_Eyebrows","Attractive","Bags_Under_
                     "Wavy_Hair","Wearing_Earrings","Wearing_Hat","Wearing_Lipstick","Wearing_Necklace",
                     "Wearing_Necktie","Young"]
 
+cfg.output_dir = "C:/MyLibrary/Pytorch_Template/first_run"
+cfg.log_dir = os.path.join(cfg.output_dir, "logs")
+
+# model config
+cfg.Model == CN()
+cfg.Model.output_dims = len(cfg.label_name)
+
+# training config
+cfg.Train = CN()
+cfg.Train.device = 'cuda'
+cfg.Train.device_id = '0'
+cfg.Train.batch_size = 8
+cfg.Train.img_size = 224
+
+
 def get_cfg_defaults():
     """Get a yacs CfgNode object with default values for my_project."""
     # Return a clone so that the defaults will not be altered

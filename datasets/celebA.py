@@ -8,7 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import csv
 
-class ImageFolderDataset(Dataset):
+class CelebADataset(Dataset):
     def __init__(self, root_dir, attr_path,  transform=None):
         self.root_dir = root_dir
         self.attr_path = attr_path
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     image_dir = 'C:/MyLibrary/Data/img_align_celeba'
     attr_path = "C:/MyLibrary/Data/celebA_Anno/list_attr_celeba.csv"
 
-    dataset = ImageFolderDataset(root_dir=image_dir, attr_path=attr_path, transform=data_transform)
+    dataset = CelebADataset(root_dir=image_dir, attr_path=attr_path, transform=data_transform)
     dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=1)
     
     for i, batch in enumerate(dataloader):
