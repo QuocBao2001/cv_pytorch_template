@@ -26,10 +26,12 @@ class ImageFolderDataset(Dataset):
         if self.transform:
             image = self.transform(image)
 
-        attribute = torch.tensor(data_infor[1:])
+        attribute = [float(item) for item in data_infor[1:]]
+        attribute = torch.tensor(attribute)
 
         sample = {
             'image': image,
+            'filename': image_name,
             'attribute': attribute
         }
         
@@ -50,17 +52,27 @@ class ImageFolderDataset(Dataset):
 
 # Example usage
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
     data_transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
     ])
-    
-    dataset = ImageFolderDataset(root_dir='path/to/your/image/folder', transform=data_transform)
+    image_dir = 'C:/MyLibrary/Data/img_align_celeba'
+    attr_path = "C:/MyLibrary/Data/celebA_Anno/list_attr_celeba.csv"
+    dataset = ImageFolderDataset(root_dir=image_dir, attr_path=attr_path, transform=data_transform)
     
     dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=1)
     
     for i, batch in enumerate(dataloader):
         images = batch['image']
         filenames = batch['filename']
-        
+        print(images[0].shape)
+        # Transpose the tensor from (channels, height, width) to (height, width, channels)
+        image_np = images[0].permute(1, 2, 0).numpy()
+
+        # Display the image
+        plt.imshow(image_np)
+        plt.axis('off')  # Turn off axis numbers and ticks
+        plt.show()
+        print(batch['attribute'])
         # Your processing code here using images and filenames
