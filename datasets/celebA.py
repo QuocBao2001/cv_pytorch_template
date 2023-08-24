@@ -11,21 +11,26 @@ class ImageFolderDataset(Dataset):
         self.attr_path = attr_path
         self.file_list = os.listdir(root_dir)
         self.transform = transform
+        
+        self.read_attr_file()
 
     def __len__(self):
         return len(self.file_list)
 
     def __getitem__(self, idx):
-        img_name = self.file_list[idx]
-        img_path = os.path.join(self.root_dir, img_name)
+        data_infor = self.data[idx]
+        image_name = data_infor[0]
+        img_path = os.path.join(self.root_dir, image_name)
         image = Image.open(img_path).convert('RGB')
         
         if self.transform:
             image = self.transform(image)
-        
+
+        attribute = torch.tensor(data_infor[1:])
+
         sample = {
             'image': image,
-            'filename': img_name
+            'attribute': attribute
         }
         
         return sample
