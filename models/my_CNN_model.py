@@ -56,7 +56,7 @@ class My_CNN_models(nn.Module):
             # nn.BatchNorm1d(512),
             nn.ReLU(),
             nn.Linear(512, output_dims),
-            nn.Tanh()
+            nn.Sigmoid()
         ) 
         # nn.init.ones_(self.outLayer[5].weight)
 
