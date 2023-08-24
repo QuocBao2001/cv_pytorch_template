@@ -47,8 +47,8 @@ class Attr_Trainer():
         self.configure_optimization()
 
     def repare_logger(self):
-        os.makedirs(self.cfg.output_dir, exist_ok=True)
-        os.makedirs(self.cfg.log_dir, exist_ok=True)
+        os.makedirs(self.cfg.output.dir, exist_ok=True)
+        os.makedirs(self.cfg.output.log_dir, exist_ok=True)
 
         logger.add(os.path.join(self.cfg.log_dir, 'train.log'))
         pass

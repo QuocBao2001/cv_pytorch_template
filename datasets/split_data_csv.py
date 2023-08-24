@@ -5,9 +5,7 @@ import random
 def split_csv(input_file, output_dir, percentages):
     with open(input_file, 'r', newline='') as f:
         reader = csv.reader(f)
-        
-        # Assuming the first row is the header
-        #header = next(reader)  
+        #header = next(reader)  # Assuming the first row is the header
         
         rows = list(reader)
         total_rows = len(rows)
@@ -15,18 +13,22 @@ def split_csv(input_file, output_dir, percentages):
         if sum(percentages) != 100:
             raise ValueError("Sum of percentages should be 100")
         
+        random.shuffle(rows)  # Shuffle the rows to ensure randomness
+        
         output_files = []
+        start_idx = 0
         for i, percent in enumerate(percentages):
             output_file = os.path.join(output_dir, f"output_{i+1}.csv")
             output_files.append((output_file, percent))
             
             with open(output_file, 'w', newline='') as outfile:
                 writer = csv.writer(outfile)
-                # writer.writerow(header)
+                #writer.writerow(header)
                 
                 num_rows = int(total_rows * percent / 100)
-                selected_rows = random.sample(rows, num_rows)
+                selected_rows = rows[start_idx : start_idx + num_rows]
                 writer.writerows(selected_rows)
+                start_idx += num_rows
                 
     return output_files
 

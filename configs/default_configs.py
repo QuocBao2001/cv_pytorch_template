@@ -9,7 +9,9 @@ import torch
 
 cfg = CN()
 
-cfg.label_name = ["5_o_Clock_Shadow","Arched_Eyebrows","Attractive","Bags_Under_Eyes","Bald","Bangs",
+# data config
+cfg.data = CN()
+cfg.data.label_name = ["5_o_Clock_Shadow","Arched_Eyebrows","Attractive","Bags_Under_Eyes","Bald","Bangs",
                     "Big_Lips","Big_Nose","Black_Hair","Blond_Hair","Blurry","Brown_Hair","Bushy_Eyebrows",
                     "Chubby","Double_Chin","Eyeglasses","Goatee","Gray_Hair","Heavy_Makeup","High_Cheekbones",
                     "Male","Mouth_Slightly_Open","Mustache","Narrow_Eyes","No_Beard","Oval_Face","Pale_Skin",
@@ -17,12 +19,18 @@ cfg.label_name = ["5_o_Clock_Shadow","Arched_Eyebrows","Attractive","Bags_Under_
                     "Wavy_Hair","Wearing_Earrings","Wearing_Hat","Wearing_Lipstick","Wearing_Necklace",
                     "Wearing_Necktie","Young"]
 
-cfg.output_dir = "C:/MyLibrary/Pytorch_Template/first_run"
-cfg.log_dir = os.path.join(cfg.output_dir, "logs")
+cfg.data.train_csv_path = "C:/MyLibrary/Data/celebA_Anno/list_attr/output_1.csv"
+cfg.data.val_csv_path = "C:/MyLibrary/Data/celebA_Anno/list_attr/output_2.csv"
+cfg.data.test_csv_path = "C:/MyLibrary/Data/celebA_Anno/list_attr/output_3.csv"
+
+# output config
+cfg.output = CN()
+cfg.output.dir = "C:/MyLibrary/Pytorch_Template/first_run"
+cfg.output.log_dir = os.path.join(cfg.output_dir, "logs")
 
 # model config
 cfg.Model == CN()
-cfg.Model.output_dims = len(cfg.label_name)
+cfg.Model.output_dims = len(cfg.data.label_name)
 
 # training config
 cfg.Train = CN()
