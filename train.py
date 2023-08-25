@@ -14,7 +14,8 @@ def main(cfg):
 
     with open(os.path.join(cfg.output.log_dir, 'full_config.yaml'), 'w') as f:
         yaml.dump(cfg, f, default_flow_style=False)
-    shutil.copy(cfg.cfg_file, os.path.join(cfg.output.log_dir, 'config.yaml'))
+    if cfg.cfg_file is not None:
+        shutil.copy(cfg.cfg_file, os.path.join(cfg.output.log_dir, 'config.yaml'))
     
 
     # start training

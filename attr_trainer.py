@@ -35,6 +35,7 @@ import torch
 from tqdm import tqdm
 from loguru import logger
 from datetime import datetime
+from torchvision import transforms
 from torch.utils.data import DataLoader
 
 from models.my_CNN_model import My_CNN_models
@@ -46,7 +47,7 @@ class Attr_Trainer():
 
         # declare device, model and loss instance
         self.device = self.cfg.device + ':' + self.cfg.device_id
-        self.model = My_CNN_models(output_dims=self.cfg.output_dims)
+        self.model = My_CNN_models(output_dims=self.cfg.model.output_dims).to(self.device)
         self.BCE = torch.nn.BCELoss()
 
         self.prepare_logger()
@@ -54,23 +55,29 @@ class Attr_Trainer():
         self.load_checkpoint()
         self.configure_optimization()
 
+        self.best_val_loss = 1e9
+
     def prepare_logger(self):
         """
         This function use to declare any logger using to monitor training
         """
-        logger.add(os.path.join(self.cfg.log_dir, 'train.log'))
+        logger.add(os.path.join(self.cfg.output.log_dir, 'train.log'))
         pass
 
     def prepare_data(self):
         """
         This function use to declare dataset for training and validation
         """
+        data_transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+        ])
         image_dir = self.cfg.data.image_dir
-        self.train_dataset = CelebADataset(image_dir, self.cfg.data.train_csv_path)
-        self.val_dataset = CelebADataset(image_dir, self.cfg.data.val_csv_path )
+        self.train_dataset = CelebADataset(image_dir, self.cfg.data.train_csv_path, data_transform)
+        self.val_dataset = CelebADataset(image_dir, self.cfg.data.val_csv_path, data_transform)
 
         logger.info(f'---- training data numbers: {len(self.train_dataset)}')
-        logger.info(f'---- training data numbers: {len(self.train_dataset)}')
+        logger.info(f'---- validation data numbers: {len(self.val_dataset)}')
 
         self.train_dataloader = DataLoader(self.train_dataset, batch_size=self.cfg.Train.batch_size, shuffle=True,
                             num_workers=1,
@@ -90,7 +97,7 @@ class Attr_Trainer():
         """
         self.optim = torch.optim.AdamW(
                                 self.model.parameters(),
-                                lr=self.cfg.finetex.lr,)
+                                lr=self.cfg.Train.lr)
 
     def load_checkpoint(self, is_best=False):
         """
@@ -105,14 +112,14 @@ class Attr_Trainer():
         """
         model_dict = {}
         model_dict['state_dict'] = self.model.state_dict()
-        model_dict['opt'] = self.opt.state_dict()
+        model_dict['opt'] = self.optim.state_dict()
         model_dict['global_step'] = self.global_step
-        model_dict['batch_size'] = self.batch_size
+        model_dict['batch_size'] = self.cfg.Train.batch_size
         if save_best:
             torch.save(model_dict, os.path.join(self.cfg.output.ckpt_dir, 
                                                 f'best_at_{self.global_step:08}.tar'))  
         else:
-            torch.save(model_dict, os.path.join(self.cfg.output.ckpt_dirr, 
+            torch.save(model_dict, os.path.join(self.cfg.output.ckpt_dir, 
                                                 f'{self.global_step:08}.tar'))   
 
     def val_step(self):
@@ -122,8 +129,9 @@ class Attr_Trainer():
         # change to eval mode
         self.model.eval()
         total_loss = 0
-        num_iters = int(len(self.val_dataset)/self.batch_size)
-        for step in tqdm(range(num_iters), desc=f"Val iter"):
+        num_iters = int(len(self.val_dataset)/self.cfg.Train.batch_size)
+        #for step in tqdm(range(num_iters), desc=f"Val iter"):
+        for step in tqdm(range(1000), desc=f"Val iter"):
             try:
                 batch = next(self.val_iter)
             except:
@@ -162,7 +170,7 @@ class Attr_Trainer():
         This is the main training function
         """
         # get total loops in one epochs
-        iters_every_epoch = int(len(self.train_dataset)/self.batch_size)
+        iters_every_epoch = int(len(self.train_dataset)/self.cfg.Train.batch_size)
 
         # get the start epoch for continue training if have previous training session
         start_epoch = self.global_step//iters_every_epoch
@@ -194,15 +202,15 @@ class Attr_Trainer():
                 
                 ### Step 3: call compute loss function ---------------------------------------------------
                 loss = self.compute_loss(infer_code, target_code)
-                self.opt.zero_grad()
+                self.optim.zero_grad()
 
                 ### Step 4: backward and optims ----------------------------------------------------------
                 loss.backward()
-                self.opt.step()
+                self.optim.step()
                 ##########################################################################################
 
                 ### log result  --------------------------------------------------------------------------
-                if self.global_step % self.cfg.Csup.log_steps == 0:
+                if self.global_step % self.cfg.Train.log_steps == 0:
                     loss_info = f"ExpName: {self.cfg.exp_name} \
                                     \nEpoch: {epoch}, \
                                     Iter: {step}/{iters_every_epoch}, \
@@ -214,7 +222,7 @@ class Attr_Trainer():
                     logger.info(loss_info)
 
                 ### visualize result  --------------------------------------------------------------------
-                if self.global_step % self.cfg.Csup.vis_steps == 0:
+                if self.global_step % self.cfg.Train.vis_steps == 0:
                     pass
 
                 ### save checkpoint  ---------------------------------------------------------------------
@@ -223,7 +231,7 @@ class Attr_Trainer():
 
                 ### validate model   ---------------------------------------------------------------------
                 if self.global_step % self.cfg.Train.val_steps == 0:
-                    self.validation_step()
+                    self.val_step()
                 
                 # if self.global_step % self.cfg.Train.eval_steps == 0:
                 #     self.evaluate()

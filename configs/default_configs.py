@@ -9,6 +9,10 @@ import torch
 
 cfg = CN()
 
+cfg.device = 'cuda'
+cfg.device_id = '0'
+cfg.exp_name = 'default'
+
 # data config
 cfg.data = CN()
 cfg.data.label_name = ["5_o_Clock_Shadow","Arched_Eyebrows","Attractive","Bags_Under_Eyes","Bald","Bangs",
@@ -26,18 +30,17 @@ cfg.data.test_csv_path = "C:/MyLibrary/Data/celebA_Anno/list_attr/output_3.csv"
 
 # output config
 cfg.output = CN()
-cfg.output.dir = "C:/MyLibrary/Pytorch_Template/first_run"
-cfg.output.log_dir = os.path.join(cfg.output_dir, "logs")
-cfg.output.ckpt_dir = os.path.join(cfg.output_dir, "ckpt")
+cfg.output.dir = "C:/MyLibrary/Pytorch_Template/output/first_run"
+cfg.output.log_dir = os.path.join(cfg.output.dir, "logs")
+cfg.output.ckpt_dir = os.path.join(cfg.output.dir, "ckpt")
 
 # model config
-cfg.Model == CN()
-cfg.Model.output_dims = len(cfg.data.label_name)
+cfg.model = CN()
+cfg.model.output_dims = len(cfg.data.label_name)
 
 # training config
 cfg.Train = CN()
-cfg.Train.device = 'cuda'
-cfg.Train.device_id = '0'
+cfg.Train.lr = 1e-4
 cfg.Train.batch_size = 8
 cfg.Train.img_size = 224
 cfg.Train.epochs = 50

@@ -19,7 +19,7 @@ class CelebADataset(Dataset):
         self.read_attr_file()
 
     def __len__(self):
-        return len(self.file_list)
+        return len(self.data)
 
     def __getitem__(self, idx):
         data_infor = self.data[idx]
