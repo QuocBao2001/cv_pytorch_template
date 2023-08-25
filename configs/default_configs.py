@@ -28,6 +28,7 @@ cfg.data.test_csv_path = "C:/MyLibrary/Data/celebA_Anno/list_attr/output_3.csv"
 cfg.output = CN()
 cfg.output.dir = "C:/MyLibrary/Pytorch_Template/first_run"
 cfg.output.log_dir = os.path.join(cfg.output_dir, "logs")
+cfg.output.ckpt_dir = os.path.join(cfg.output_dir, "ckpt")
 
 # model config
 cfg.Model == CN()
@@ -41,6 +42,7 @@ cfg.Train.batch_size = 8
 cfg.Train.img_size = 224
 cfg.Train.epochs = 50
 cfg.Train.log_steps = 100
+cfg.Train.val_log_steps = 10
 cfg.Train.save_ckpt_steps = 500
 cfg.Train.val_steps = 500
 cfg.Train.vis_steps = 1000
