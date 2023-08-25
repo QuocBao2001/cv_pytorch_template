@@ -2,11 +2,12 @@
 This file declare pytorch dataset to load CelebA image and attribute save in csv file
 """
 import os
-from PIL import Image
-import torch
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
 import csv
+import torch
+from PIL import Image
+from torchvision import transforms
+from torch.utils.data import Dataset, DataLoader
+
 
 class CelebADataset(Dataset):
     def __init__(self, root_dir, attr_path,  transform=None):

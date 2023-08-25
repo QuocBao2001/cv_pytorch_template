@@ -1,10 +1,9 @@
 """
 This file declare a sample CNN models follow with FNN layers
 """
-
+import torch
 import torch.nn as nn
 from torchsummary import summary
-import torch
 
 class DoubleConv(nn.Module):
     """(convolution => [BN] => ReLU) * 2"""
