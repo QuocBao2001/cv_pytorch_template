@@ -36,6 +36,7 @@ from tqdm import tqdm
 from loguru import logger
 from datetime import datetime
 from torchvision import transforms
+import torch.utils.tensorboard as tb
 from torch.utils.data import DataLoader
 
 from models.my_CNN_model import My_CNN_models
@@ -62,7 +63,10 @@ class Attr_Trainer():
         This function use to declare any logger using to monitor training
         """
         logger.add(os.path.join(self.cfg.output.log_dir, 'train.log'))
-        pass
+        if self.cfg.log.tensorboard:
+            self.tb_train_logger = tb.SummaryWriter(os.path.join(self.cfg.output.log_dir, 'train'), flush_secs=1)
+            self.tb_valid_logger = tb.SummaryWriter(os.path.join(self.cfg.output.log_dir, 'valid'), flush_secs=1)
+
 
     def prepare_data(self):
         """
@@ -82,7 +86,7 @@ class Attr_Trainer():
         self.train_dataloader = DataLoader(self.train_dataset, batch_size=self.cfg.Train.batch_size, shuffle=True,
                             num_workers=1,
                             pin_memory=True,
-                            drop_last=False)
+                            drop_last=True)
         self.val_dataloader = DataLoader(self.val_dataset, batch_size=self.cfg.Train.batch_size, shuffle=False,
                             num_workers=8,
                             pin_memory=True,
@@ -104,17 +108,19 @@ class Attr_Trainer():
         This function use to load checkpoint from previous training
         """
         # total training loops have done
-        self.global_step = 0
+        self.train_global_step = 0
+        self.val_global_step = 0
         # resume training, including model weight, opt, steps
         if self.cfg.Train.resume:
             if os.path.exists(self.cfg.Train.checkpoint_path):
                 checkpoint = torch.load(self.cfg.Train.checkpoint_path)
                 self.model.load_state_dict(checkpoint['state_dict'])
                 self.optim.load_state_dict(checkpoint['opt'])
-                self.global_step = checkpoint['global_step']
+                self.train_global_step = checkpoint['train_global_step']
+                self.val_global_step = checkpoint['val_global_step']
                 # write log
                 logger.info(f"resume training from {self.cfg.Train.checkpoint_path}")
-                logger.info(f"training start from step {self.global_step}")
+                logger.info(f"training start from step {self.train_global_step}")
             else: 
                 raise ValueError('checkpoint model path not found')
         else:
@@ -122,10 +128,10 @@ class Attr_Trainer():
                 logger.info('Train from pretrained')
                 pretrained_weight = torch.load(self.cfg.Train.pretrained_path)
                 self.model.load_state_dict(pretrained_weight)
-                self.global_step = 0
+                self.train_global_step = 0
             else:
                 logger.info('can not find pretrained weight, training from scratch')
-                self.global_step = 0
+                self.train_global_step = 0
 
     def save_model(self, save_best=False):
         """
@@ -134,14 +140,15 @@ class Attr_Trainer():
         model_dict = {}
         model_dict['state_dict'] = self.model.state_dict()
         model_dict['opt'] = self.optim.state_dict()
-        model_dict['global_step'] = self.global_step
+        model_dict['train_global_step'] = self.train_global_step
+        model_dict['val_global_step'] = self.val_global_step
         model_dict['batch_size'] = self.cfg.Train.batch_size
         if save_best:
             torch.save(model_dict, os.path.join(self.cfg.output.ckpt_dir, 
-                                                f'best_at_{self.global_step:08}.tar'))  
+                                                f'best_at_{self.train_global_step:08}.tar'))  
         else:
             torch.save(model_dict, os.path.join(self.cfg.output.ckpt_dir, 
-                                                f'{self.global_step:08}.tar'))   
+                                                f'{self.train_global_step:08}.tar'))   
 
     def val_step(self):
         """
@@ -167,6 +174,9 @@ class Attr_Trainer():
                 infer_code = self.model(images)
                 loss = self.compute_loss(infer_code, target_code)
                 total_loss += loss
+            self.val_global_step += 1
+            if self.cfg.log.tensorboard:
+                self.tb_valid_logger.add_scalar('valid/loss', loss, global_step=self.val_global_step)
         
         total_loss = total_loss / num_iters
         # log val total loss
@@ -175,7 +185,7 @@ class Attr_Trainer():
         # self best weight if total loss less than current best val loss
         if total_loss < self.best_val_loss:
             self.save_model(save_best=True)   
-            self.best_val_loss = loss
+            self.best_val_loss = total_loss
         
         # set back model to train mode
         self.model.train()
@@ -196,7 +206,7 @@ class Attr_Trainer():
         iters_every_epoch = int(len(self.train_dataset)/self.cfg.Train.batch_size)
 
         # get the start epoch for continue training if have previous training session
-        start_epoch = self.global_step//iters_every_epoch
+        start_epoch = self.train_global_step//iters_every_epoch
 
         # set model to train mode
         self.model.train()
@@ -206,7 +216,7 @@ class Attr_Trainer():
             # for a step in a single epoch
             for step in tqdm(range(iters_every_epoch), desc=f"Epoch[{epoch+1}/{self.cfg.Train.epochs}]"):
                 # move to the step that fit with previous
-                if epoch*iters_every_epoch + step < self.global_step:
+                if epoch*iters_every_epoch + step < self.train_global_step:
                     continue
                 
                 ######################################## Training ########################################
@@ -233,7 +243,7 @@ class Attr_Trainer():
                 ##########################################################################################
 
                 ### log result  --------------------------------------------------------------------------
-                if self.global_step % self.cfg.Train.log_steps == 0:
+                if self.train_global_step % self.cfg.Train.log_steps == 0:
                     loss_info = f"ExpName: {self.cfg.exp_name} \
                                     \nEpoch: {epoch}, \
                                     Iter: {step}/{iters_every_epoch}, \
@@ -243,22 +253,25 @@ class Attr_Trainer():
                    
                     loss_info = loss_info + f', total loss: {loss:.4f}, '
                     logger.info(loss_info)
+                if self.cfg.log.tensorboard:
+                    self.tb_train_logger.add_scalar('train/loss', 
+                                                                loss, global_step=self.train_global_step)
 
                 ### visualize result  --------------------------------------------------------------------
-                if self.global_step % self.cfg.Train.vis_steps == 0:
+                if self.train_global_step % self.cfg.Train.vis_steps == 0:
                     pass
 
                 ### save checkpoint  ---------------------------------------------------------------------
-                if self.global_step % self.cfg.Train.save_ckpt_steps  == 0:
+                if self.train_global_step % self.cfg.Train.save_ckpt_steps  == 0:
                     self.save_model()
 
                 ### validate model   ---------------------------------------------------------------------
-                if self.global_step % self.cfg.Train.val_steps == 0:
+                if self.train_global_step % self.cfg.Train.val_steps == 0:
                     self.val_step()
                 
                 # if self.global_step % self.cfg.Train.eval_steps == 0:
                 #     self.evaluate()
 
-                self.global_step += 1
-                if self.global_step > self.cfg.Train.num_steps:
+                self.train_global_step += 1
+                if self.train_global_step > self.cfg.Train.num_steps:
                     break

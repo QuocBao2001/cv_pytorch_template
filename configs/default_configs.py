@@ -32,6 +32,11 @@ cfg.output.dir = "C:/MyLibrary/Pytorch_Template/output/first_run"
 cfg.output.log_dir = os.path.join(cfg.output.dir, "logs")
 cfg.output.ckpt_dir = os.path.join(cfg.output.dir, "ckpt")
 
+# log config
+cfg.log = CN()
+#cfg.log.loguru = True
+cfg.log.tensorboard = True
+
 # model config
 cfg.model = CN()
 cfg.model.output_dims = len(cfg.data.label_name)

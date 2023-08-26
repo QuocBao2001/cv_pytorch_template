@@ -4,6 +4,6 @@ output:
   ckpt_dir: "C:/MyLibrary/Pytorch_Template/output/second_run/ckpt"
 Train:
   resume: True
-  checkpoint_path: "C:/MyLibrary/Pytorch_Template/output/first_run/ckpt/best_at_00002000.tar"
+  checkpoint_path: "C:/MyLibrary/Pytorch_Template/output/second_run/ckpt/00006000.tar"
   batch_size: 16
   val_steps: 1000
