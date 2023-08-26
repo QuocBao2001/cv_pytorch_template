@@ -52,8 +52,8 @@ class Attr_Trainer():
 
         self.prepare_logger()
         self.prepare_data()
-        self.load_checkpoint()
         self.configure_optimization()
+        self.load_checkpoint()
 
         self.best_val_loss = 1e9
 
@@ -105,6 +105,27 @@ class Attr_Trainer():
         """
         # total training loops have done
         self.global_step = 0
+        # resume training, including model weight, opt, steps
+        if self.cfg.Train.resume:
+            if os.path.exists(self.cfg.Train.checkpoint_path):
+                checkpoint = torch.load(self.cfg.Train.checkpoint_path)
+                self.model.load_state_dict(checkpoint['state_dict'])
+                self.optim.load_state_dict(checkpoint['opt'])
+                self.global_step = checkpoint['global_step']
+                # write log
+                logger.info(f"resume training from {self.cfg.Train.checkpoint_path}")
+                logger.info(f"training start from step {self.global_step}")
+            else: 
+                raise ValueError('checkpoint model path not found')
+        else:
+            if os.path.exists(self.cfg.Train.pretrained_path):
+                logger.info('Train from pretrained')
+                pretrained_weight = torch.load(self.cfg.Train.pretrained_path)
+                self.model.load_state_dict(pretrained_weight)
+                self.global_step = 0
+            else:
+                logger.info('can not find pretrained weight, training from scratch')
+                self.global_step = 0
 
     def save_model(self, save_best=False):
         """
@@ -130,6 +151,8 @@ class Attr_Trainer():
         self.model.eval()
         total_loss = 0
         num_iters = int(len(self.val_dataset)/self.cfg.Train.batch_size)
+        # testing
+        num_iters = 1000
         #for step in tqdm(range(num_iters), desc=f"Val iter"):
         for step in tqdm(range(1000), desc=f"Val iter"):
             try:
@@ -226,7 +249,7 @@ class Attr_Trainer():
                     pass
 
                 ### save checkpoint  ---------------------------------------------------------------------
-                if self.global_step % self.cfg.Train.log_steps  == 0:
+                if self.global_step % self.cfg.Train.save_ckpt_steps  == 0:
                     self.save_model()
 
                 ### validate model   ---------------------------------------------------------------------

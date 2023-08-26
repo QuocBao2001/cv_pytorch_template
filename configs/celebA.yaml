@@ -1,0 +1,9 @@
+output:
+  dir: "C:/MyLibrary/Pytorch_Template/output/second_run"
+  log_dir: "C:/MyLibrary/Pytorch_Template/output/second_run/logs"
+  ckpt_dir: "C:/MyLibrary/Pytorch_Template/output/second_run/ckpt"
+Train:
+  resume: True
+  checkpoint_path: "C:/MyLibrary/Pytorch_Template/output/first_run/ckpt/best_at_00002000.tar"
+  batch_size: 16
+  val_steps: 1000

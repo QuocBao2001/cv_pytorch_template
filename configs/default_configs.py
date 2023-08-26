@@ -3,9 +3,7 @@ Default config
 '''
 from yacs.config import CfgNode as CN
 import argparse
-import yaml
 import os
-import torch
 
 cfg = CN()
 
@@ -40,12 +38,16 @@ cfg.model.output_dims = len(cfg.data.label_name)
 
 # training config
 cfg.Train = CN()
+
+cfg.Train.pretrained_path = "C:/dummy/pretrained/path.tar"
+cfg.Train.resume = False
+cfg.Train.checkpoint_path = "C:/dummy/pretrained/path.tar"
+
 cfg.Train.lr = 1e-4
 cfg.Train.batch_size = 8
 cfg.Train.img_size = 224
 cfg.Train.epochs = 50
 cfg.Train.log_steps = 100
-cfg.Train.val_log_steps = 10
 cfg.Train.save_ckpt_steps = 500
 cfg.Train.val_steps = 500
 cfg.Train.vis_steps = 1000
