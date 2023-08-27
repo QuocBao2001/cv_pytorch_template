@@ -31,6 +31,7 @@ cfg.output = CN()
 cfg.output.dir = "C:/MyLibrary/Pytorch_Template/output/first_run"
 cfg.output.log_dir = os.path.join(cfg.output.dir, "logs")
 cfg.output.ckpt_dir = os.path.join(cfg.output.dir, "ckpt")
+cfg.output.img_dir = os.path.join(cfg.output.dir, "imgs")
 
 # log config
 cfg.log = CN()
@@ -57,6 +58,11 @@ cfg.Train.save_ckpt_steps = 500
 cfg.Train.val_steps = 500
 cfg.Train.vis_steps = 1000
 cfg.Train.num_steps = 100000000
+
+# infer config
+cfg.Infer = CN()
+cfg.Infer.grid_cols = 4
+cfg.Infer.Imgs_per_grid = 16 
 
 def get_cfg_defaults():
     """Get a yacs CfgNode object with default values for my_project."""
